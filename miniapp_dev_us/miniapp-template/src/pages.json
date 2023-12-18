@@ -1,0 +1,16 @@
+{
+  "pages": [
+    {
+      "path": "pages/home/home",
+      "style": {
+        "navigationBarTitleText": "US"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "US",
+    "navigationBarBackgroundColor": "#D48831",
+    "backgroundColor": "#F8F8F8"
+  }
+}

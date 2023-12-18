@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>掲示板アプリ</title>
+    <meta charset="UTF-8"> <!-- Ensure UTF-8 encoding -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background: #f9f9f9;
+        }
+        .header {
+            background-color: #FF69B4;
+            color: white;
+            text-align: center;
+            padding: 24px 0; /* Increased padding for larger height */
+            font-size: 24px; /* Larger font size for header */
+        }
+        .nav-bar {
+            display: flex;
+            justify-content: space-around;
+            background-color: #fff;
+            padding: 24px 0; /* Increased padding for larger height */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Added shadow for depth */
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .nav-item.current {
+            color: rgb(255, 133, 133); /* Pink color for the current item */
+            border-bottom: 2px solid rgb(255, 133, 133); /* Underline for the current item */
+        }
+        .nav-item {
+            text-align: center;
+            color: #757575; /* Slightly darker grey for better readability */
+            flex-grow: 1;
+        }
+        .nav-item img {
+            width: 30px; /* Smaller icons for navigation */
+            height: 30px;
+            margin-bottom: 5px;
+        }
+        .content {
+            padding: 15px;
+            background: #fff;
+        }
+        .board-item {
+            border-bottom: 1px solid #eee;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Space between title and info */
+        }
+        .board-title {
+            color: #333; /* Darker color for title for readability */
+            font-size: 20px; /* Larger font size for title */
+            font-weight: bold;
+        }
+        .board-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px; /* Larger font size for info */
+            color: #757575;
+        }
+        .board-comments {
+            color: #FF69B4; /* Matching the header color */
+            font-weight: bold;
+        }
+        .board-lastupdate {
+            font-style: italic;
+        }
+        @media screen and (max-width: 600px) {
+            .header {
+                font-size: 20px;
+                padding: 18px 0; /* Adjusted padding for mobile */
+            }
+            .nav-bar {
+                padding: 18px 0; /* Adjusted padding for mobile */
+            }
+            .nav-item {
+                font-size: 13px;
+            }
+            .nav-item {
+                flex-grow: 0;
+                width: 25%; /* Fixed width for nav items */
+            }
+            .board-title {
+                font-size: 18px;
+            }
+            .board-info {
+                font-size: 13px;
+            }
+        }
+    </style>
+    
+    <script type="module">
+    // <===============================FireStoreルール===================================>
+
+    // <取得データ以下>
+        // ■掲示板タイトル（fb_boards/ドキュメントid/fb_boards_title）
+        // ■掲示板タイムスタンプ（fb_boards/ドキュメントid/fb_boards_timestamp）
+        // ■掲示板コメント数（fb_boards/ドキュメントid/fb_boards_comment_num）
+    // <掲示板表示ルール>
+        // ■コメント数順に並び替える。
+        // ■最終更新日時は、取得したタイムスタンプ情報と現在の時刻の差異から取得。
+        //     例）5分前ならば「5分前」と表示。24時間前を超えたら「昨日」と表示。48時間を超えたらそのまま最終更新日時（fb_boards_timestamp）を表示。
+
+    // <===============================FireStoreルール（ここまで）===================================>
+
+        // モジュールのインポート
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, doc, updateDoc, getDocs, query, where, getDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        // Firebaseの設定
+        const firebaseConfig = {
+        apiKey: "AIzaSyCgpey5OG17jpqAmoP_l3L-7Ai3CoIvH7M",
+        authDomain: "miniapp-dev-us.firebaseapp.com",
+        projectId: "miniapp-dev-us",
+        storageBucket: "miniapp-dev-us.appspot.com",
+        messagingSenderId: "788551938459",
+        appId: "1:788551938459:web:a4662a7bc803dc8ddf313e",
+        measurementId: "G-28ZSZZ23XC"
+        };
+        // Firebaseの初期化
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        // 掲示板投稿から最終更新日時の計算する関数
+        function calculateLastUpdated(timestamp) {
+            const now = new Date();
+            const lastUpdatedDate = new Date(timestamp.seconds * 1000); // Firestoreのタイムスタンプは秒単位なのでミリ秒に変換
+            const diffInMs = now - lastUpdatedDate;
+            const diffInMinutes = Math.floor(diffInMs / 60000);
+
+            if (diffInMinutes < 1) {
+                return 'たった今';
+            } else if (diffInMinutes < 60) {
+                return `${diffInMinutes}分前`;
+            } else if (diffInMinutes < 1440) {
+                return `${Math.floor(diffInMinutes / 60)}時間前`;
+            } else if (diffInMinutes < 2880) {
+                return '昨日';
+            } else {
+                return lastUpdatedDate.toLocaleString();
+            }
+        }
+
+        // Firestoreからデータを取得し、DOMを生成する関数
+        // ※<div class="content" id="boardsContainer"></div>内部にDOMを生成
+        async function generateBoardsDom() {
+            const boardsQuery = query(collection(db, "fb_boards"), orderBy("fb_board_comment_num", "desc"));
+            const querySnapshot = await getDocs(boardsQuery);
+
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                const boardTitle = data.fb_board_title;
+                const boardCommentNum = data.fb_board_comment_num;
+                const boardTimestamp = data.fb_board_timestamp;
+                const lastUpdated = calculateLastUpdated(boardTimestamp);
+
+                const boardDiv = document.createElement('div');
+                boardDiv.classList.add('board-item');
+
+                const boardTitleDiv = document.createElement('div');
+                boardTitleDiv.classList.add('board-title');
+                boardTitleDiv.textContent = boardTitle;
+
+                const boardInfoDiv = document.createElement('div');
+                boardInfoDiv.classList.add('board-info');
+
+                const boardCommentsSpan = document.createElement('span');
+                boardCommentsSpan.classList.add('board-comments');
+                boardCommentsSpan.textContent = `${boardCommentNum} コメント`;
+
+                const boardLastUpdateSpan = document.createElement('span');
+                boardLastUpdateSpan.classList.add('board-lastupdate');
+                boardLastUpdateSpan.textContent = lastUpdated;
+
+                boardInfoDiv.appendChild(boardCommentsSpan);
+                boardInfoDiv.appendChild(boardLastUpdateSpan);
+
+                boardDiv.appendChild(boardTitleDiv);
+                boardDiv.appendChild(boardInfoDiv);
+
+                document.getElementById('boardsContainer').appendChild(boardDiv);
+            });
+        }
+        // 関数を実行して掲示板情報を表示
+        generateBoardsDom();
+
+    </script>
+</head>
+<body>
+    <div class="header">
+        アス
+    </div>
+    <div class="nav-bar">
+        <a href="home.html" class="nav-item current">
+            <img src="test.png" alt="掲示板">
+            <div>掲示板</div>
+        </a>
+        <a href="search.html" class="nav-item">
+            <img src="search.png" alt="探す">
+            <div>探す</div>
+        </a>
+        <a href="notify.html" class="nav-item">
+            <img src="notify.png" alt="お知らせ">
+            <div>お知らせ</div>
+        </a>
+        <a href="manual.html" class="nav-item">
+            <img src="manual.png" alt="使い方">
+            <div>使い方</div>
+        </a>
+    </div>
+
+<!-- <===============================掲示板DOMここから===================================> -->
+    <div class="content" id="boardsContainer">
+        <!-- ここに、掲示板DOMが挿入される -->
+        
+        <!-- 掲示板DOMのフォーマット -->
+        <!-- 
+            <div class="board-item">
+                <div class="board-title">掲示板のタイトル</div>
+                <div class="board-info">
+                    <span class="board-comments">1000 コメント</span>
+                    <span class="board-lastupdate">今日</span>
+                </div>
+            </div>
+        -->
+
+    </div>
+<!-- <===============================掲示板DOMここまで===================================> -->
+
+</body>
+</html>
+
