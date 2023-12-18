@@ -41,10 +41,6 @@
             color: #757575; /* Slightly darker grey for better readability */
             flex-grow: 1;
         }
-        .nav-item.current {
-            color: rgb(255, 133, 133); /* Pink color for the current item */
-            border-bottom: 2px solid rgb(255, 133, 133); /* Underline for the current item */
-        }
         .nav-item img {
             width: 30px; /* Smaller icons for navigation */
             height: 30px;
@@ -78,6 +74,27 @@
         }
         .board-lastupdate {
             font-style: italic;
+        }
+        .content > div {
+            border-bottom: 2px dashed grey; /* Add grey dashed border to the div elements in content */
+            padding-bottom: 20px; /* Add padding to the bottom of the div for space above the border */
+            margin-bottom: 20px; /* Add margin to the bottom of the div for space below the border */
+        }
+        .content > div:last-child {
+            border-bottom: none; /* Remove border from the last div element */
+        }
+        button {
+            display: block; /* Make the button a block element to fill the container */
+            width: 80%; /* Width of the button */
+            margin: 20px auto; /* Center the button with automatic margin */
+            padding: 15px 0; /* Padding for the button */
+            background-color: rgb(255, 133, 133); /* Pink background color for the button */
+            color: white; /* Text color for the button */
+            border: none; /* Remove the border */
+            border-radius: 5px; /* Slightly round the corners of the button */
+            font-size: 18px; /* Increase the font size */
+            cursor: pointer; /* Change cursor to pointer on hover */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Slight shadow for depth */
         }
         @media screen and (max-width: 600px) {
             .header {
@@ -117,7 +134,7 @@
             <img src="test.png" alt="掲示板">
             <div>掲示板</div>
         </a>
-        <a href="search.html" class="nav-item current">
+        <a href="search.html" class="nav-item">
             <img src="search.png" alt="探す">
             <div>探す</div>
         </a>
@@ -129,6 +146,37 @@
             <img src="manual.png" alt="使い方">
             <div>使い方</div>
         </a>
+    </div>
+    <div class="content">
+        <!-- Placeholder for the board creation notice -->
+        <div>
+            <h2>掲示板を作成する前に</h2>
+            <p>掲示板を作成する前に、以下の点にご注意ください。</p>
+            <ul>
+                <li>掲示板の内容は、他のユーザーが参照可能です。</li>
+                <li>適切な表現を心がけ、敬意を持って利用しましょう。</li>
+                <li>不適切な内容は削除される場合があります。</li>
+            </ul>
+            
+        </div>
+
+        <div>
+            <h2>以下の点も意識して作成しましょう</h2>
+            <p>皆が見る掲示板です。思いやりを持った空間にする為にも皆さんのご協力をお願いします🙇
+            </p>
+            <ul>
+                <li>わかりやすいタイトルをつけましょう</li>
+                <li>内容にあったカテゴリーを選択しましょう</li>
+                <li>具体的な内容を本文に記載しましょう</li>
+            </ul>
+        </div>
+
+        <button onclick="window.location.href='create_newboard.html';">
+            掲示板作成画面へ
+        </button>
+
+
+        
     </div>
 
         
