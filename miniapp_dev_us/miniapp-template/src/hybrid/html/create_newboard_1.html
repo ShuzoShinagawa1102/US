@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>掲示板作成</title>
     <style>
         body {
@@ -17,11 +17,17 @@
             padding: 20px;
             color: white;
         }
+        .create-newboard {
+            position: absolute;
+            top: 24px; /* Align with the other header content */
+            right: 10px; /* Place it on the right side of the header */
+        }
         .nav-bar {
             display: flex;
             justify-content: space-around;
             padding: 20px;
-            background-color: #fff;        }
+            background-color: #fff;
+        }
         .nav-item {
             text-align: center;
             color: #757575;

@@ -101,6 +101,38 @@
             }
         }
     </style>
+    <!-- 通知バッジのスタイル -->
+    <style>
+        .notification-badge {
+            display: none; /* 初期状態では非表示 */
+            position: fixed;
+            top: 100px; /* ナビゲーションバーの下 */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #FF69B4;
+            color: white;
+            padding: 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            z-index: 2000;
+        }
+        /* アニメーション */
+        .show-badge {
+            display: block;
+            animation: slideDown 0.5s ease;
+        }
+        @keyframes slideDown {
+            from {
+                top: 50px;
+                opacity: 0;
+            }
+            to {
+                top: 100px;
+                opacity: 1;
+            }
+        }
+    </style>
     
     <script type="module">
     // <===============================FireStoreルール===================================>
@@ -118,7 +150,7 @@
 
         // モジュールのインポート
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, doc, updateDoc, getDocs, query, where, getDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, updateDoc, getDocs, query, where, getDoc, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         // Firebaseの設定
         const firebaseConfig = {
         apiKey: "AIzaSyCgpey5OG17jpqAmoP_l3L-7Ai3CoIvH7M",
@@ -132,6 +164,7 @@
         // Firebaseの初期化
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        
         // 掲示板投稿から最終更新日時の計算する関数
         function calculateLastUpdated(timestamp) {
             const now = new Date();
@@ -155,6 +188,9 @@
         // Firestoreからデータを取得し、DOMを生成する関数
         // ※<div class="content" id="boardsContainer"></div>内部にDOMを生成
         async function generateBoardsDom() {
+            const boardsContainer = document.getElementById('boardsContainer');
+            boardsContainer.innerHTML = ''; // 既存の掲示板DOMをクリア
+
             const boardsQuery = query(collection(db, "fb_boards"), orderBy("fb_board_comment_num", "desc"));
             const querySnapshot = await getDocs(boardsQuery);
 
@@ -192,7 +228,23 @@
                 document.getElementById('boardsContainer').appendChild(boardDiv);
             });
         }
-        // 関数を実行して掲示板情報を表示
+
+        // Firestoreのデータベース更新時に通知バッジを表示する
+        let isFirstLoad = true;
+        onSnapshot(query(collection(db, "fb_boards"), orderBy("fb_board_comment_num", "desc")), (snapshot) => {
+            if (!isFirstLoad) {
+                document.getElementById('notificationBadge').classList.add('show-badge');
+            }
+            isFirstLoad = false;
+        });
+
+        // 通知バッジのクリックイベント
+        document.getElementById('notificationBadge').addEventListener('click', function() {
+            this.classList.remove('show-badge');
+            generateBoardsDom();
+        });
+
+        // 初回読み込み時、掲示板情報を表示
         generateBoardsDom();
 
     </script>
@@ -222,6 +274,10 @@
             <div>使い方</div>
         </a>
     </div>
+
+    <!-- 通知バッジ -->
+    <div class="notification-badge" id="notificationBadge">新しい投稿があります</div>
+
 
 <!-- <===============================掲示板DOMここから===================================> -->
     <div class="content" id="boardsContainer">

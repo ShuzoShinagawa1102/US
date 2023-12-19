@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>掲示板作成</title>
     <style>
         body {
@@ -16,6 +16,11 @@
             text-align: center;
             padding: 20px;
             color: white;
+        }
+        .create-newboard {
+            position: absolute;
+            top: 24px; /* Align with the other header content */
+            right: 10px; /* Place it on the right side of the header */
         }
         .nav-bar {
             display: flex;
@@ -108,38 +113,11 @@
     </div>
 
     <div class="step-indicator">
-        <span class="active">❶ 入力</span>
+        <span>❶ 入力</span>
         <span>❷ 確認</span>
-        <span>❸ 完了</span>
+        <span class="active">❸ 完了</span>
     </div>
-    
-    <div class="form-section">
-        <label for="title">タイトル</label>
-        <input type="text" id="title" placeholder="タイトルを書く">
-        
-        <label for="description">コメント (説明文)</label>
-        <textarea id="description" rows="4" placeholder="説明を書く"></textarea>
-        
-        <label for="category">カテゴリー</label>
-        <select id="category">
-            <option value="">選択してください</option>
-            <option value="disaster">防災</option>
-            <option value="emergency">災害</option>
-            <option value="other">その他</option>
-        </select>
-        
-        <label for="anonymous">匿名で投稿</label>
-        <input type="checkbox" id="anonymous" checked>
-        
-        <!-- 名前入力は匿名チェックが外れたときに表示 -->
-        <label for="name" style="display:none;">名前</label>
-        <input type="text" id="name" placeholder="名前を書く" style="display:none;">
-        
-        <div class="button-group">
-            <button type="button" id="edit">編集する</button>
-            <button type="button" id="submit">投稿する</button>
-        </div>
-    </div>
+
     
     <!-- 必要なJavaScriptをここに記述 -->
     <script>

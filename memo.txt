@@ -1,109 +1,88 @@
-ok。
-そうしたら、実際に掲示板作成画面の方を実装しよう。
-このファイルを編集していきます。
-
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-    <title>掲示板アプリ</title>
-    <meta charset="UTF-8"> <!-- Ensure UTF-8 encoding -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>掲示板作成</title>
     <style>
         body {
+            font-family: Arial, sans-serif;
             margin: 0;
-            font-family: 'Arial', sans-serif;
-            background: #f9f9f9;
+            padding: 0;
+            background-color: #f9f9f9;
         }
         .header {
             background-color: #FF69B4;
-            color: white;
             text-align: center;
-            padding: 24px 0; /* Increased padding for larger height */
-            font-size: 24px; /* Larger font size for header */
-        }
-        .header img {
-            max-width: 100%; /* Ensure the image is responsive and fits the header */
-            height: auto; /* Maintain the aspect ratio */
-        }
-        .create-newboard {
-            position: absolute;
-            top: 24px; /* Align with the other header content */
-            right: 10px; /* Place it on the right side of the header */
+            padding: 20px;
+            color: white;
         }
         .nav-bar {
             display: flex;
             justify-content: space-around;
-            background-color: #fff;
-            padding: 24px 0; /* Increased padding for larger height */
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Added shadow for depth */
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
+            padding: 20px;
+            background-color: #fff;        }
         .nav-item {
             text-align: center;
-            color: #757575; /* Slightly darker grey for better readability */
-            flex-grow: 1;
-        }
-        .nav-item img {
-            width: 30px; /* Smaller icons for navigation */
-            height: 30px;
-            margin-bottom: 5px;
-        }
-        .content {
-            padding: 15px;
-            background: #fff;
-        }
-        .board-item {
-            border-bottom: 1px solid #eee;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px; /* Space between title and info */
-        }
-        .board-title {
-            color: #333; /* Darker color for title for readability */
-            font-size: 20px; /* Larger font size for title */
-            font-weight: bold;
-        }
-        .board-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px; /* Larger font size for info */
             color: #757575;
         }
-        .board-comments {
-            color: #FF69B4; /* Matching the header color */
-            font-weight: bold;
+        .nav-item img {
+            width: 30px;
+            height: 30px;
         }
-        .board-lastupdate {
-            font-style: italic;
+        
+        .step-indicator {
+            display: flex;
+            justify-content: space-between; /* アイテム間に均等なスペースを作る */
+            background-color: #f9f9f9; /* 親要素と同じ背景色を指定 */
+            
+            padding: 10px;
+            font-size: 16px;
+            color: #aaa;
+            margin: 0 20px; /* コンテナの左右にマージンを追加 */
         }
-        @media screen and (max-width: 600px) {
-            .header {
-                font-size: 20px;
-                padding: 18px 0; /* Adjusted padding for mobile */
-            }
-            .nav-bar {
-                padding: 18px 0; /* Adjusted padding for mobile */
-            }
-            .nav-item {
-                font-size: 13px;
-            }
-            .nav-item {
-                flex-grow: 0;
-                width: 25%; /* Fixed width for nav items */
-            }
-            .board-title {
-                font-size: 18px;
-            }
-            .board-info {
-                font-size: 13px;
-            }
+        .step-indicator span {
+            flex: 1; /* 各ステップインジケータのアイテムが同じ幅になるようにする */
+            text-align: center; /* テキストを中央揃えにする */
         }
+        .step-indicator span.active {
+            color: #FF8585;
+        }
+
+        .form-section {
+            padding: 20px;
+            background-color: #fff;
+        }
+        h4 {
+            margin: 10px 0;
+        }
+        .divider {
+            border-bottom: 1px solid #ddd;
+            margin: 20px 0;
+        }
+        .small-text {
+            font-size: 12px;
+            color: #757575;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #FF8585;
+            color: white;
+            cursor: pointer;
+        }
+        .button-group {
+            display: flex;
+            justify-content: center; /* 中央揃えに変更 */
+            padding: 20px;
+        }
+        .button-group button {
+            flex-basis: auto; /* ボタンの幅を内容に応じて調整 */
+            width: 50%; /* 希望するボタンの幅に応じて調整 */
+        }
+        /* ここに追加のスタイリングを記述 */
     </style>
-
-
 </head>
 <body>
     <div class="header">
@@ -131,46 +110,66 @@ ok。
         </a>
     </div>
 
-    <-- この下に帯やコンテンツを追加していく。。。。 -->
+    <div class="step-indicator">
+        <span>❶ 入力</span>
+        <span class="active">❷ 確認</span>
+        <span>❸ 完了</span>
+    </div>
 
+    <div class="form-section">
+        <h3>掲示板を確認する</h3>
+        <div class="divider"></div>
+        <h4 id="board-title"></h4>
+        <div class="divider"></div>
+        <div id="creator-info" class="small-text"></div>
+        <h4 id="board-discription"></h4>
+        <div class="divider"></div>
+        <br>
+        <h3>投稿にあたって</h3>
+        <p>皆様から頂く掲示板は、防災・災害に役立つ貴重な情報となります。以下の様な話題を投稿するようにしてください。</p>
+        <ul>
+            <li>防災・災害に役に立ちそうな話題</li>
+            <li>緊急性の高い話題</li>
+            <li>皆がコミュニケーションが取りやすい話題</li>
+            <li>避難所の話題</li>
+            <li>救急医療に関する話題</li>
+        </ul>
         
+        
+        <div class="button-group">
+            <button type="button" id="submit">掲示板を投稿する</button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // localStorageからデータを取得
+            var boardData = JSON.parse(localStorage.getItem('boardData'));
+
+            if (boardData) {
+                // タイトルを表示
+                document.getElementById('board-title').textContent = boardData.board_title;
+
+                // 作成者情報
+                var creatorInfo = boardData.board_toggle_anonymous ? '匿名' : boardData.board_creater_name;
+                document.getElementById('creator-info').textContent = creatorInfo;
+
+                // 説明文を表示
+                document.getElementById('board-discription').textContent = boardData.board_discription;
+            }
+        });
+
+    </script>
 </body>
 </html>
 
 
-掲示板登録画面は、前まで作ったヘッダー、ナビゲーションバーはそのまま、
-下のコンテンツ部分だけを変えていきます。
-まず、掲示板登録画面は3つのフェーズ画面からできていて、
-１：掲示板情報入力画面
-２：確認画面
-３：完了画面
-そして、これら１〜３のフェーズは、ユーザーの作業により、一つのファイル（create_newboard.html）内でレスポンシブ・動的に簡潔します。
-また、ユーザーが今自分が、１〜３までのフェーズの、どのフェーズにいるかどうか？を明確にわかってほしいため、ナビゲーションバーの下に、帯状に「❶入力　❷確認　❸完了」といったような帯を画面横幅いっぱいに配置します。そして、デフォルトではそれら帯の文字の色は、薄いグレーですが、ユーザー自身が今どこにいるかを明確にわかる為、自分が操作しているフェーズの時は、その文字（例えば❶入力）がピンク色（255,133,133）に変化します。
+ok。そうしたら、次は、ボタン（掲示板を投稿する）を押した時の処理を考えます。
+まず、ボタンを押したら、（create_newboard_3.html）にリダイレクトします。
 
-
-そして、まず、１の掲示板入力画面の特徴について、です。
-１では、帯の下に、掲示板を投稿するという文字が書かれており、その下に、投稿内容をインプットするモノがあります。
-まず1行目には、インプットボックスがあります。placeholderには（タイトルを書く）とします。
-そして、画像及びインプットボックスの下には、コメント（説明文）が来ます。これは、テキストボックスで多めに入力できる様にします。
-その下に、カテゴリーを選択するリストボックスが来ます。ここでvalueはまだ決まっていませんが、ひとまず、防災、災害、その他の3つにしておいてください。
-そして、その下には、匿名で投稿するか否かのチェックボックスが来ます。チェックボックスは少し大きめでポップなデザインにしてください。もし匿名チェックボックスを外したら、動的に名前を入力するインプットボックスを表示させてください。これにより、例えば公的な組織がもし掲示板を作る場合、信憑性が保ちやすくなります。
-そして、それらの情報は以下のルールで送信ボタンと共に保持します。送信ボタンは、「トピックを投稿する」という表示にしてください。
-タイトル：String型：board_title
-コメント：String型：board_discription
-カテゴリー：String型：board_category
-匿名か否か：Boolean型：board_toggle_anonymous
-名前データ：String型：board_creater_name
-送信ボタンが押されたら、2の確認画面へ移ります。
-
-そして、まず、２の確認画面についてです。
-この画面では、帯の下に色々配置していくのですが、
-一行目のインプットで入力したタイトルをh2タグか何かで表示させます。また、タイトルの上に小さくboard_creater_nameを表示させ、もしboard_toggle_annonymousがfalseだったら、「匿名」を表示させます。
-そして、その下に薄いグレーのボーダーラインを引き、その直下に、「掲示板投稿にあたって」というh3タグを書き、その下に投稿前最終確認の注意書き文章を書いてください。
-そして、その下に、ボタンが2つくるのですが、左側（画面3割程度）には「編集する」というボタンで、背景白で文字グレーでお願いします。そして、右側に残り7割で「投稿する」というボタンで背景ピンク（255.133.133）で文字は白でお願いします。
-そして、投稿するボタンを押したら、3の完了画面に移ります。
 同時に、firestoreへデータを保存します。
-firestoreのデータ構造は以下となります。
-【fb_board_contents（コレクション）/ ドキュメントID / フィールド】
+保存する先のfirestoreのデータ構造は以下となります。
+【fb_boards（コレクション）/ ドキュメントID / フィールド】
 フィールド一覧
 fb_board_category（文字列）
 fb_board_comment_num（数値）
@@ -181,7 +180,7 @@ fb_board_toggle_anonymous（ブール値）
 fb_board_creater_name（文字列）
 
 まず、データの保存ルールについて、
-fb_board_contents（コレクション）直下にランダムでいいので、ドキュメントIDを生成し、その中に、上記でしめしたフィールド一覧全てのバリューを、1のフェーズですでに取得してあるデータから代入して追加し、更新させてください。なお、fb_board_timestamp（タイムスタンプ）に関しては、2のフェーズで「投稿する」ボタンを押した瞬間の日時を反映させてください。以下の様な例となるはずです。
+fb_boards（コレクション）直下にランダムでいいので、ドキュメントIDを生成し、その中に、上記でしめしたフィールド一覧全てのバリューを、すでに取得してあるデータから代入して追加し、更新させてください。なお、fb_board_timestamp（タイムスタンプ）に関しては、「投稿するボタン」を押した瞬間の日時を反映させてください。以下の様な例となるはずです。
 
 firebase側（更新される側）← | → ブラウザ側（更新する側）
 =======================================
@@ -195,10 +194,3 @@ fb_board_creater_name ← | → board_creater_name
 =========================================-
 
 掲示板作成日時：（firestoreのtimestamp）
-
-そして、3の完了画面についてです。
-これは、単純に掲示板の投稿を完了しただけであるので、まず帯の下に、「掲示板投稿完了」という文字をh2タグでかいて、その下に、投稿が完了した旨をpタグの文章で書き、その下にボタン（左側に、掲示板一覧へというボタンを書いてhome.htmlにリダイレクトさせてください。右側のボタンには、ひとまず、「投稿した掲示板を見る」と書いてボタンを作ってほしいのですが、リダイレクト先はまだかかなくても大丈夫です。）を作ってください。デザインは2と同じ様に統一性を持たせてください。
-
-
-全体的にデザインは統一性を持たせてください。
-念の為、1の掲示板入力画面について参考画像をお送りするので、これを参考デザインとして反映させてください。

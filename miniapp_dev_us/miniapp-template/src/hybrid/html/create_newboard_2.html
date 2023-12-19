@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>掲示板作成</title>
     <style>
         body {
@@ -16,6 +16,11 @@
             text-align: center;
             padding: 20px;
             color: white;
+        }
+        .create-newboard {
+            position: absolute;
+            top: 24px; /* Align with the other header content */
+            right: 10px; /* Place it on the right side of the header */
         }
         .nav-bar {
             display: flex;
@@ -126,7 +131,7 @@
         <div class="divider"></div>
         <br>
         <h3>投稿にあたって</h3>
-        <p>皆様から頂く掲示板は、防災・災害に役立つ貴重な情報となります。ですので、以下の様な話題を投稿する様にしてください。</p>
+        <p>皆様から頂く掲示板は、防災・災害に役立つ貴重な情報となります。以下の様な話題を投稿するようにしてください。</p>
         <ul>
             <li>防災・災害に役に立ちそうな話題</li>
             <li>緊急性の高い話題</li>
@@ -141,6 +146,76 @@
         </div>
     </div>
     
+    <!-- Firestoreの処理 -->
+    <script type="module">
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, addDoc, query, collection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        // Firebaseの設定
+        const firebaseConfig = {
+        apiKey: "AIzaSyCgpey5OG17jpqAmoP_l3L-7Ai3CoIvH7M",
+        authDomain: "miniapp-dev-us.firebaseapp.com",
+        projectId: "miniapp-dev-us",
+        storageBucket: "miniapp-dev-us.appspot.com",
+        messagingSenderId: "788551938459",
+        appId: "1:788551938459:web:a4662a7bc803dc8ddf313e",
+        measurementId: "G-28ZSZZ23XC"
+        };
+        // Firebaseの初期化
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('submit').addEventListener('click', function() {
+                var boardData = JSON.parse(localStorage.getItem('boardData'));
+
+                if (boardData) {
+                    // Firestoreにデータを保存
+                    addDoc(collection(db, 'fb_boards'), {
+                        fb_board_category: boardData.board_category,
+                        fb_board_comment_num: 0, // 初期値として0を設定
+                        fb_board_discription: boardData.board_discription,
+                        fb_board_timestamp: new Date(), // 現在の日時
+                        fb_board_title: boardData.board_title,
+                        fb_board_toggle_anonymous: boardData.board_toggle_anonymous,
+                        fb_board_creater_name: boardData.board_creater_name
+                    })
+
+
+                    .then((docRef) => {
+                        console.log("Document written with ID: ", docRef.id);
+
+
+
+
+               // サブコレクション `fb_board_contents` を作成（初期状態では空）
+                const contentsRef = collection(db, `fb_boards/${docRef.id}/fb_board_contents`);
+                // 初期データなどが必要な場合はここで addDoc を使用
+                addDoc(contentsRef, {
+                    content: "初期投稿", // 仮の初期データ
+                    timestamp: new Date()
+                })
+                .then(() => {
+                    console.log("Initial content added to fb_board_contents");
+                })
+                .catch((error) => {
+                    console.error("Error adding initial content: ", error);
+                });
+
+
+
+
+                
+                        window.location.href = 'create_newboard_3.html';
+                    })
+                    .catch((error) => {
+                        console.error("Error adding document: ", error);
+                    });
+                }
+            });
+        });
+
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // localStorageからデータを取得
@@ -158,29 +233,6 @@
                 document.getElementById('board-discription').textContent = boardData.board_discription;
             }
         });
-        // // 送信ボタンの処理
-        // document.getElementById('submit').addEventListener('click', function() {
-        //     // 入力値を取得
-        //     var board_title = document.getElementById('title').value;
-        //     var board_discription = document.getElementById('discription').value;
-        //     var board_category = document.getElementById('category').value;
-        //     var board_toggle_anonymous = document.getElementById('anonymous').checked;
-        //     var board_creater_name = anonymous ? '' : document.getElementById('name').value;
-
-        //     // データをlocalStorageに保存
-        //     localStorage.setItem('boardData', JSON.stringify({
-        //         title: title,
-        //         discription: discription,
-        //         category: category,
-        //         anonymous: anonymous,
-        //         name: name
-        //     }));
-
-        //     // 次のページへリダイレクト
-        //     window.location.href = 'create_newboard_2.html';
-        // });
-
-
     </script>
 </body>
 </html>
