@@ -84,17 +84,21 @@
             border-bottom: none; /* Remove border from the last div element */
         }
         button {
-            display: block; /* Make the button a block element to fill the container */
-            width: 80%; /* Width of the button */
-            margin: 20px auto; /* Center the button with automatic margin */
-            padding: 15px 0; /* Padding for the button */
-            background-color: rgb(255, 133, 133); /* Pink background color for the button */
-            color: white; /* Text color for the button */
-            border: none; /* Remove the border */
-            border-radius: 5px; /* Slightly round the corners of the button */
-            font-size: 18px; /* Increase the font size */
-            cursor: pointer; /* Change cursor to pointer on hover */
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Slight shadow for depth */
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #FF8585;
+            color: white;
+            cursor: pointer;
+        }
+        .button-group {
+            display: flex;
+            justify-content: center; /* 中央揃えに変更 */
+            padding: 20px;
+        }
+        .button-group button {
+            flex-basis: auto; /* ボタンの幅を内容に応じて調整 */
+            width: 50%; /* 希望するボタンの幅に応じて調整 */
         }
         @media screen and (max-width: 600px) {
             .header {
@@ -170,10 +174,11 @@
                 <li>具体的な内容を本文に記載しましょう</li>
             </ul>
         </div>
-
-        <button onclick="window.location.href='create_newboard.html';">
-            掲示板作成画面へ
-        </button>
+        <div class="button-group">
+            <button onclick="window.location.href='create_newboard_1.html';">
+                掲示板作成画面へ
+            </button>
+        </div>
 
 
         

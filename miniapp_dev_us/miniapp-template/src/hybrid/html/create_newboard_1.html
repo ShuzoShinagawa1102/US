@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>掲示板作成</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        .header {
+            background-color: #FF69B4;
+            text-align: center;
+            padding: 20px;
+            color: white;
+        }
+        .nav-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            background-color: #fff;        }
+        .nav-item {
+            text-align: center;
+            color: #757575;
+        }
+        .nav-item img {
+            width: 30px;
+            height: 30px;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: space-between; /* アイテム間に均等なスペースを作る */
+            background-color: #f9f9f9; /* 親要素と同じ背景色を指定 */
+            
+            padding: 10px;
+            font-size: 16px;
+            color: #aaa;
+            margin: 0 20px; /* コンテナの左右にマージンを追加 */
+        }
+        .step-indicator span {
+            flex: 1; /* 各ステップインジケータのアイテムが同じ幅になるようにする */
+            text-align: center; /* テキストを中央揃えにする */
+        }
+        .step-indicator span.active {
+            color: #FF8585;
+        }
+
+        .form-section {
+            padding: 20px;
+            background-color: #fff;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        /* チェックボックスをカスタマイズ */
+        .checkbox-container input[type="checkbox"] {
+            display: none; /* 実際のチェックボックスを隠す */
+        }
+
+        .checkbox-container label {
+            position: relative;
+            padding-left: 35px;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .checkbox-container label:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 25px;
+            height: 25px;
+            border: 2px solid #FF69B4;
+            border-radius: 5px;
+            background-color: white;
+        }
+
+        .checkbox-container input[type="checkbox"]:checked + label:after {
+            content: '✔';
+            position: absolute;
+            left: 5px;
+            top: -3px;
+            font-size: 24px;
+            color: #FF69B4;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #FF8585;
+            color: white;
+            cursor: pointer;
+        }
+        .button-group {
+            display: flex;
+            justify-content: center; /* 中央揃えに変更 */
+            padding: 20px;
+        }
+        .button-group button {
+            flex-basis: auto; /* ボタンの幅を内容に応じて調整 */
+            width: 50%; /* 希望するボタンの幅に応じて調整 */
+        }
+        /* ここに追加のスタイリングを記述 */
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="us_banner.png" alt="アス">
+        <a href="before_create_newboard.html" class="create-newboard">
+            <img src="create_newboard.png" alt="新しい掲示板を作成">
+        </a>
+    </div>
+    <div class="nav-bar">
+        <a href="home.html" class="nav-item">
+            <img src="test.png" alt="掲示板">
+            <div>掲示板</div>
+        </a>
+        <a href="search.html" class="nav-item">
+            <img src="search.png" alt="探す">
+            <div>探す</div>
+        </a>
+        <a href="notify.html" class="nav-item">
+            <img src="notify.png" alt="お知らせ">
+            <div>お知らせ</div>
+        </a>
+        <a href="manual.html" class="nav-item">
+            <img src="manual.png" alt="使い方">
+            <div>使い方</div>
+        </a>
+    </div>
+
+    <div class="step-indicator">
+        <span class="active">❶ 入力</span>
+        <span>❷ 確認</span>
+        <span>❸ 完了</span>
+    </div>
+
+    <div class="form-section">
+        <h3>掲示板を作成する</h3>
+        <input type="text" id="title" placeholder="タイトルを書く">
+        <textarea id="discription" rows="4" placeholder="説明を書く"></textarea>
+        <select id="category">
+            <option value="">掲示板の種類を教えてください</option>
+            <option value="disaster">防災</option>
+            <option value="emergency">災害</option>
+            <option value="other">その他</option>
+        </select>
+        
+        <!-- チェックボックスとラベルのコンテナを追加 -->
+        <div class="checkbox-container">
+            <input type="checkbox" id="anonymous" checked>
+            <label for="anonymous">匿名で投稿</label>
+        </div>
+        
+        <!-- 名前入力は匿名チェックが外れたときに表示 -->
+        <input type="text" id="name" placeholder="名前を書く" style="display:none;">
+
+        
+        <div class="button-group">
+            <button type="button" id="submit">掲示板を投稿する</button>
+        </div>
+    </div>
+    
+    <script>
+        // 匿名チェックボックスの表示制御
+        document.getElementById('anonymous').addEventListener('change', function() {
+            var nameField = document.getElementById('name');
+            var nameLabel = document.querySelector('label[for="name"]');
+            if (this.checked) {
+                nameField.style.display = 'none';
+                nameLabel.style.display = 'none';
+            } else {
+                nameField.style.display = 'block';
+                nameLabel.style.display = 'block';
+            }
+        });
+
+        // 送信ボタンの処理
+        document.getElementById('submit').addEventListener('click', function() {
+            // 入力値を取得
+            var board_title = document.getElementById('title').value;
+            var board_discription = document.getElementById('discription').value;
+            var board_category = document.getElementById('category').value;
+            var board_toggle_anonymous = document.getElementById('anonymous').checked;
+            var board_creater_name = board_toggle_anonymous ? '' : document.getElementById('name').value;
+
+            // データをlocalStorageに保存
+            localStorage.setItem('boardData', JSON.stringify({
+                board_title: board_title,
+                board_discription: board_discription,
+                board_category: board_category,
+                board_toggle_anonymous: board_toggle_anonymous,
+                board_creater_name: board_creater_name
+            }));
+
+            // 次のページへリダイレクト
+            window.location.href = 'create_newboard_2.html';
+        });
+
+
+
+    </script>
+</body>
+</html>

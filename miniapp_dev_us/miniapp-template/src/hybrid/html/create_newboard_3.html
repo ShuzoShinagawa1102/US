@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>掲示板作成</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        .header {
+            background-color: #FF69B4;
+            text-align: center;
+            padding: 20px;
+            color: white;
+        }
+        .nav-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nav-item {
+            text-align: center;
+            color: #757575;
+        }
+        .nav-item img {
+            width: 30px;
+            height: 30px;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            background-color: #fff;
+            padding: 10px;
+            font-size: 16px;
+            color: #aaa;
+        }
+        .step-indicator span.active {
+            color: #FF8585;
+        }
+        .form-section {
+            padding: 20px;
+            background-color: #fff;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #FF8585;
+            color: white;
+            cursor: pointer;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+        }
+        .button-group button {
+            flex-basis: 48%;
+        }
+        /* ここに追加のスタイリングを記述 */
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="us_banner.png" alt="アス">
+        <a href="before_create_newboard.html" class="create-newboard">
+            <img src="create_newboard.png" alt="新しい掲示板を作成">
+        </a>
+    </div>
+    <div class="nav-bar">
+        <a href="home.html" class="nav-item">
+            <img src="test.png" alt="掲示板">
+            <div>掲示板</div>
+        </a>
+        <a href="search.html" class="nav-item">
+            <img src="search.png" alt="探す">
+            <div>探す</div>
+        </a>
+        <a href="notify.html" class="nav-item">
+            <img src="notify.png" alt="お知らせ">
+            <div>お知らせ</div>
+        </a>
+        <a href="manual.html" class="nav-item">
+            <img src="manual.png" alt="使い方">
+            <div>使い方</div>
+        </a>
+    </div>
+
+    <div class="step-indicator">
+        <span class="active">❶ 入力</span>
+        <span>❷ 確認</span>
+        <span>❸ 完了</span>
+    </div>
+    
+    <div class="form-section">
+        <label for="title">タイトル</label>
+        <input type="text" id="title" placeholder="タイトルを書く">
+        
+        <label for="description">コメント (説明文)</label>
+        <textarea id="description" rows="4" placeholder="説明を書く"></textarea>
+        
+        <label for="category">カテゴリー</label>
+        <select id="category">
+            <option value="">選択してください</option>
+            <option value="disaster">防災</option>
+            <option value="emergency">災害</option>
+            <option value="other">その他</option>
+        </select>
+        
+        <label for="anonymous">匿名で投稿</label>
+        <input type="checkbox" id="anonymous" checked>
+        
+        <!-- 名前入力は匿名チェックが外れたときに表示 -->
+        <label for="name" style="display:none;">名前</label>
+        <input type="text" id="name" placeholder="名前を書く" style="display:none;">
+        
+        <div class="button-group">
+            <button type="button" id="edit">編集する</button>
+            <button type="button" id="submit">投稿する</button>
+        </div>
+    </div>
+    
+    <!-- 必要なJavaScriptをここに記述 -->
+    <script>
+        // 匿名チェックボックスの表示制御
+        document.getElementById('anonymous').addEventListener('change', function() {
+            var nameField = document.getElementById('name');
+            var nameLabel = document.querySelector('label[for="name"]');
+            if (this.checked) {
+                nameField.style.display = 'none';
+                nameLabel.style.display = 'none';
+            } else {
+                nameField.style.display = 'block';
+                nameLabel.style.display = 'block';
+            }
+        });
+
+        // 送信ボタンの処理
+        document.getElementById('submit').addEventListener('click', function() {
+            // ここで入力値の検証とデータの収集を行い、Firestoreに保存する処理を記述
+            // 以下はサンプルコードであり、実際のFirebaseの処理はSDKを通じて行う
+            var title = document.getElementById('title').value;
+            var description = document.getElementById('description').value;
+            var category = document.getElementById('category').value;
+            var anonymous = document.getElementById('anonymous').checked;
+            var name = anonymous ? '' : document.getElementById('name').value;
+            
+            // Firestoreへの保存処理をここに記述
+            console.log('保存データ:', {
+                title: title,
+                description: description,
+                category: category,
+                anonymous: anonymous,
+                name: name
+            });
+            
+            // ここで2の確認画面への遷移処理を記述
+        });
+    </script>
+</body>
+</html>
