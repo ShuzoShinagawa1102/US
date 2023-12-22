@@ -229,8 +229,14 @@
                 const contentsRef = collection(db, `fb_boards/${docRef.id}/fb_board_contents`);
                 // 初期データなどが必要な場合はここで addDoc を使用
                 addDoc(contentsRef, {
-                    content: "初期投稿", // 仮の初期データ
-                    timestamp: new Date()
+                    fb_board_content_comment: "初期投稿", // 仮の初期データ
+                    fb_board_content_timestamp: new Date(),
+                    fb_board_content_reaction_num_good: 1,
+                    fb_board_content_reaction_num_thanks: 1,
+                    fb_board_content_reaction_num_pray: 1,
+                    fb_board_content_reaction_num_heart: 1,
+                    fb_board_content_reaction_num_confuse: 1,
+                    fb_board_content_reaction_num_cry: 1,
                 })
                 .then(() => {
                     console.log("Initial content added to fb_board_contents");

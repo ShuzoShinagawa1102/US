@@ -224,6 +224,12 @@
 
                 boardDiv.appendChild(boardTitleDiv);
                 boardDiv.appendChild(boardInfoDiv);
+                // 掲示板アイテムにクリックイベントを追加
+                boardDiv.addEventListener('click', () => {
+                // comment.htmlにリダイレクトし、掲示板IDを渡す
+                    window.location.href = `comment.html?boardId=${doc.id}`;
+                });
+
 
                 document.getElementById('boardsContainer').appendChild(boardDiv);
             });

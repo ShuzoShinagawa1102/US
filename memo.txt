@@ -194,3 +194,364 @@ fb_board_creater_name ← | → board_creater_name
 =========================================-
 
 掲示板作成日時：（firestoreのtimestamp）
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ok。
+今度は、実際に掲示板をユーザーが開いて、それを閲覧することができる機能を実装していこう（あとで、コメントを追加する機能を追加します。）
+まず、今は、firestoreから掲示板一覧情報を取得し、コメント数順に表示する機能を持ったhome.htmlがあります。
+この、各掲示板の情報は、firestoreにてこのような構造でデータを持っています。
+
+【fb_boards（コレクション）/ ドキュメントID / フィールド,fb_board_content（サブコレクション）】
+「fb_boards（コレクション）/ ドキュメントID」に対するフィールド一覧（これは、掲示板の概要情報を表します。）
+fb_board_category（文字列）
+fb_board_comment_num（数値）
+fb_board_discription（文字列）
+fb_board_timestamp（タイムスタンプ）
+fb_board_title（文字列）
+fb_board_toggle_anonymous（ブール値）
+fb_board_creater_name（文字列）
+
+【fb_board_content（サブコレクション）/ ドキュメントID / フィールド】
+「fb_board_content（サブコレクション）/ ドキュメントID 」に対するフィールド一覧（これは、各掲示板に対しての書き込み情報を表します。）
+fb_board_content_comment（文字列）
+fb_board_content_timestamp（タイムスタンプ）
+fb_board_content_reaction_num_good（数値）
+fb_board_content_reaction_num_thanks（数値）
+fb_board_content_reaction_num_pray（数値）
+fb_board_content_reaction_num_heart（数値）
+fb_board_content_reaction_num_confuse（数値）
+fb_board_content_reaction_num_cry（数値）
+
+で、やりたいのは、home.htmlにて、各掲示板をタッチすると、comment.htmlへリダイレクトし、そのcomment.htmlではヘッダーとナビゲーションバーはそのままで、その下にhome.htmlでクリックした掲示板に対応する書き込み情報がスレッド上で上から流れてほしい。
+また、スレッド上（comment.html）では、fb_board_content（サブコレクション）/ ドキュメントIDのフィールドに値する情報が表示されるはずなんだけども、並び替えとして、fb_board_content_timestampが最も若い値を上にしてそこから下に流してほしい。また、各スレッドに書き込む情報については、左上にまず番号（数値（1からスタート））、その横に「匿名」、その横に書き込んだ時刻を書いてほしい。その下に、実際のコメント内容（fb_board_content_comment）を書く。
+そして、コメントの下には、リアクションを作るんだけど、リアクションの外観はこのようになる。↓
+もし、以下の様な場合だったら、、、、
+fb_board_content_reaction_num_good: 1,
+fb_board_content_reaction_num_thanks: 1,
+fb_board_content_reaction_num_pray: 1,
+fb_board_content_reaction_num_heart: 1,
+fb_board_content_reaction_num_confuse: 1,
+fb_board_content_reaction_num_cry: 1,      
+then、
+「👍 1」「🙇1」「🙏1」「😍1」「😩1」「😢1」
+また、リアクション追加ボタンもその横に追加しておいてほしい。
+
+また、各スレッドにはグレーの区切り線も追加しておいて。
+じゃあんひとまず、home.htmlを載せるから、まずはcomment.htmlへリダイレクトする修正、
+そしてcommemt.htmlの生成をお願いします。
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>掲示板アプリ</title>
+    <meta charset="UTF-8"> <!-- Ensure UTF-8 encoding -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background: #f9f9f9;
+        }
+        .header {
+            background-color: #FF69B4;
+            color: white;
+            text-align: center;
+            padding: 24px 0; /* Increased padding for larger height */
+        }
+        .header img {
+            max-width: 100%; /* Ensure the image is responsive and fits the header */
+            height: auto; /* Maintain the aspect ratio */
+        }
+        .create-newboard {
+            position: absolute;
+            top: 24px; /* Align with the other header content */
+            right: 10px; /* Place it on the right side of the header */
+        }
+        .nav-bar {
+            display: flex;
+            justify-content: space-around;
+            background-color: #fff;
+            padding: 24px 0; /* Increased padding for larger height */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Added shadow for depth */
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .nav-item.current {
+            color: rgb(255, 133, 133); /* Pink color for the current item */
+            border-bottom: 2px solid rgb(255, 133, 133); /* Underline for the current item */
+        }
+        .nav-item {
+            text-align: center;
+            color: #757575; /* Slightly darker grey for better readability */
+            flex-grow: 1;
+        }
+        .nav-item img {
+            width: 30px; /* Smaller icons for navigation */
+            height: 30px;
+            margin-bottom: 5px;
+        }
+        .content {
+            padding: 15px;
+            background: #fff;
+        }
+        .board-item {
+            border-bottom: 1px solid #eee;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Space between title and info */
+        }
+        .board-title {
+            color: #333; /* Darker color for title for readability */
+            font-size: 20px; /* Larger font size for title */
+            font-weight: bold;
+        }
+        .board-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px; /* Larger font size for info */
+            color: #757575;
+        }
+        .board-comments {
+            color: #FF69B4; /* Matching the header color */
+            font-weight: bold;
+        }
+        .board-lastupdate {
+            font-style: italic;
+        }
+        @media screen and (max-width: 600px) {
+            .header {
+                font-size: 20px;
+                padding: 18px 0; /* Adjusted padding for mobile */
+            }
+            .nav-bar {
+                padding: 18px 0; /* Adjusted padding for mobile */
+            }
+            .nav-item {
+                font-size: 13px;
+            }
+            .nav-item {
+                flex-grow: 0;
+                width: 25%; /* Fixed width for nav items */
+            }
+            .board-title {
+                font-size: 18px;
+            }
+            .board-info {
+                font-size: 13px;
+            }
+        }
+    </style>
+    <!-- 通知バッジのスタイル -->
+    <style>
+        .notification-badge {
+            display: none; /* 初期状態では非表示 */
+            position: fixed;
+            top: 100px; /* ナビゲーションバーの下 */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #FF69B4;
+            color: white;
+            padding: 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            z-index: 2000;
+        }
+        /* アニメーション */
+        .show-badge {
+            display: block;
+            animation: slideDown 0.5s ease;
+        }
+        @keyframes slideDown {
+            from {
+                top: 50px;
+                opacity: 0;
+            }
+            to {
+                top: 100px;
+                opacity: 1;
+            }
+        }
+    </style>
+    
+    <script type="module">
+    // <===============================FireStoreルール===================================>
+
+    // <取得データ以下>
+        // ■掲示板タイトル（fb_boards/ドキュメントid/fb_boards_title）
+        // ■掲示板タイムスタンプ（fb_boards/ドキュメントid/fb_boards_timestamp）
+        // ■掲示板コメント数（fb_boards/ドキュメントid/fb_boards_comment_num）
+    // <掲示板表示ルール>
+        // ■コメント数順に並び替える。
+        // ■最終更新日時は、取得したタイムスタンプ情報と現在の時刻の差異から取得。
+        //     例）5分前ならば「5分前」と表示。24時間前を超えたら「昨日」と表示。48時間を超えたらそのまま最終更新日時（fb_boards_timestamp）を表示。
+
+    // <===============================FireStoreルール（ここまで）===================================>
+
+        // モジュールのインポート
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, doc, updateDoc, getDocs, query, where, getDoc, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        // Firebaseの設定
+        const firebaseConfig = {
+        apiKey: "AIzaSyCgpey5OG17jpqAmoP_l3L-7Ai3CoIvH7M",
+        authDomain: "miniapp-dev-us.firebaseapp.com",
+        projectId: "miniapp-dev-us",
+        storageBucket: "miniapp-dev-us.appspot.com",
+        messagingSenderId: "788551938459",
+        appId: "1:788551938459:web:a4662a7bc803dc8ddf313e",
+        measurementId: "G-28ZSZZ23XC"
+        };
+        // Firebaseの初期化
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // 掲示板投稿から最終更新日時の計算する関数
+        function calculateLastUpdated(timestamp) {
+            const now = new Date();
+            const lastUpdatedDate = new Date(timestamp.seconds * 1000); // Firestoreのタイムスタンプは秒単位なのでミリ秒に変換
+            const diffInMs = now - lastUpdatedDate;
+            const diffInMinutes = Math.floor(diffInMs / 60000);
+
+            if (diffInMinutes < 1) {
+                return 'たった今';
+            } else if (diffInMinutes < 60) {
+                return `${diffInMinutes}分前`;
+            } else if (diffInMinutes < 1440) {
+                return `${Math.floor(diffInMinutes / 60)}時間前`;
+            } else if (diffInMinutes < 2880) {
+                return '昨日';
+            } else {
+                return lastUpdatedDate.toLocaleString();
+            }
+        }
+
+        // Firestoreからデータを取得し、DOMを生成する関数
+        // ※<div class="content" id="boardsContainer"></div>内部にDOMを生成
+        async function generateBoardsDom() {
+            const boardsContainer = document.getElementById('boardsContainer');
+            boardsContainer.innerHTML = ''; // 既存の掲示板DOMをクリア
+
+            const boardsQuery = query(collection(db, "fb_boards"), orderBy("fb_board_comment_num", "desc"));
+            const querySnapshot = await getDocs(boardsQuery);
+
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                const boardTitle = data.fb_board_title;
+                const boardCommentNum = data.fb_board_comment_num;
+                const boardTimestamp = data.fb_board_timestamp;
+                const lastUpdated = calculateLastUpdated(boardTimestamp);
+
+                const boardDiv = document.createElement('div');
+                boardDiv.classList.add('board-item');
+
+                const boardTitleDiv = document.createElement('div');
+                boardTitleDiv.classList.add('board-title');
+                boardTitleDiv.textContent = boardTitle;
+
+                const boardInfoDiv = document.createElement('div');
+                boardInfoDiv.classList.add('board-info');
+
+                const boardCommentsSpan = document.createElement('span');
+                boardCommentsSpan.classList.add('board-comments');
+                boardCommentsSpan.textContent = `${boardCommentNum} コメント`;
+
+                const boardLastUpdateSpan = document.createElement('span');
+                boardLastUpdateSpan.classList.add('board-lastupdate');
+                boardLastUpdateSpan.textContent = lastUpdated;
+
+                boardInfoDiv.appendChild(boardCommentsSpan);
+                boardInfoDiv.appendChild(boardLastUpdateSpan);
+
+                boardDiv.appendChild(boardTitleDiv);
+                boardDiv.appendChild(boardInfoDiv);
+
+                document.getElementById('boardsContainer').appendChild(boardDiv);
+            });
+        }
+
+        // Firestoreのデータベース更新時に通知バッジを表示する
+        let isFirstLoad = true;
+        onSnapshot(query(collection(db, "fb_boards"), orderBy("fb_board_comment_num", "desc")), (snapshot) => {
+            if (!isFirstLoad) {
+                document.getElementById('notificationBadge').classList.add('show-badge');
+            }
+            isFirstLoad = false;
+        });
+
+        // 通知バッジのクリックイベント
+        document.getElementById('notificationBadge').addEventListener('click', function() {
+            this.classList.remove('show-badge');
+            generateBoardsDom();
+        });
+
+        // 初回読み込み時、掲示板情報を表示
+        generateBoardsDom();
+
+    </script>
+</head>
+<body>
+    <div class="header">
+        <img src="us_banner.png" alt="アス">
+        <a href="before_create_newboard.html" class="create-newboard">
+            <img src="create_newboard.png" alt="新しい掲示板を作成">
+        </a>
+    </div>
+    <div class="nav-bar">
+        <a href="home.html" class="nav-item current">
+            <img src="test.png" alt="掲示板">
+            <div>掲示板</div>
+        </a>
+        <a href="search.html" class="nav-item">
+            <img src="search.png" alt="探す">
+            <div>探す</div>
+        </a>
+        <a href="notify.html" class="nav-item">
+            <img src="notify.png" alt="お知らせ">
+            <div>お知らせ</div>
+        </a>
+        <a href="manual.html" class="nav-item">
+            <img src="manual.png" alt="使い方">
+            <div>使い方</div>
+        </a>
+    </div>
+
+    <!-- 通知バッジ -->
+    <div class="notification-badge" id="notificationBadge">新しい投稿があります</div>
+
+
+<!-- <===============================掲示板DOMここから===================================> -->
+    <div class="content" id="boardsContainer">
+        <!-- ここに、掲示板DOMが挿入される -->
+        
+        <!-- 掲示板DOMのフォーマット -->
+        <!-- 
+            <div class="board-item">
+                <div class="board-title">掲示板のタイトル</div>
+                <div class="board-info">
+                    <span class="board-comments">1000 コメント</span>
+                    <span class="board-lastupdate">今日</span>
+                </div>
+            </div>
+        -->
+
+    </div>
+<!-- <===============================掲示板DOMここまで===================================> -->
+
+</body>
+</html>
+
+
