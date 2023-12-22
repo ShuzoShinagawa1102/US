@@ -2,8 +2,8 @@
   "name": "US",
   "appid": "__UNI__US",
   "description": "",
-  "versionName": "1.1.9",
-  "versionCode": 119,
+  "versionName": "1.2.0",
+  "versionCode": 120,
   "transformPx": false,
   "app-plus": {
     "compilerVersion": 3,

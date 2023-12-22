@@ -110,6 +110,28 @@
     .reaction-btn.clicked {
         background-color: #FFC0CB; /* クリック後の背景色を変更 */
     }
+    .reaction-bar {
+        display: none;
+        position: absolute;
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 15px;
+        padding: 5px;
+        box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
+        white-space: nowrap;
+    }
+
+    .reaction-bubble {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+        text-align: center;
+        border-radius: 50%;
+        background-color: #f0f0f0;
+        margin: 0 5px;
+        cursor: pointer;
+    }
 
         @media screen and (max-width: 600px) {
             .header {
@@ -136,65 +158,62 @@
     </style>
 
 
+<script type="module">
+    // Firebaseの初期化など
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, doc, getDocs, query, orderBy, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    <script type="module">
-        // Firebaseの初期化など
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, doc, getDocs, query, orderBy, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    
-        const firebaseConfig = {
-            apiKey: "AIzaSyCgpey5OG17jpqAmoP_l3L-7Ai3CoIvH7M",
-            authDomain: "miniapp-dev-us.firebaseapp.com",
-            projectId: "miniapp-dev-us",
-            storageBucket: "miniapp-dev-us.appspot.com",
-            messagingSenderId: "788551938459",
-            appId: "1:788551938459:web:a4662a7bc803dc8ddf313e",
-            measurementId: "G-28ZSZZ23XC"
-        };
-    
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-    
-        // URLパラメータから掲示板IDを取得
-        const queryParams = new URLSearchParams(window.location.search);
-        const boardId = queryParams.get('boardId');
-    
-        // 掲示板の書き込み情報を取得して表示する関数
-        async function generateCommentsDom(boardId) {
-            const commentsContainer = document.getElementById('commentsContainer');
-            commentsContainer.innerHTML = ''; // 既存のコメントDOMをクリア
-    
-            const commentsQuery = query(collection(db, `fb_boards/${boardId}/fb_board_contents`), orderBy("fb_board_content_timestamp", "asc"));
-            const querySnapshot = await getDocs(commentsQuery);
-            let commentNumber = 1;
-    
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                const commentContent = data.fb_board_content_comment;
-                const commentTimestamp = new Date(data.fb_board_content_timestamp.seconds * 1000).toLocaleString();
-                const creatorInfo = data.fb_board_toggle_anonymous ? '匿名' : 'ユーザー';
-    
-                // 各コメントのDOMを作成
-                // 各コメントのDOMを作成
-                const commentDiv = document.createElement('div');
-                commentDiv.classList.add('comment');
-                commentDiv.innerHTML = `
-    <div class="comment-header">${commentNumber++}. ${creatorInfo} - ${commentTimestamp}</div>
-    <p class="comment-content">${commentContent}</p>
-    <div class="reactions">
-        <span class="reaction reaction-btn" data-boardid="${boardId}" data-commentid="${doc.id}" data-reactiontype="fb_board_content_reaction_num_good">👍 ${data.fb_board_content_reaction_num_good || 0}</span>
-        <span class="reaction reaction-btn" data-boardid="${boardId}" data-commentid="${doc.id}" data-reactiontype="fb_board_content_reaction_num_thanks">🙇 ${data.fb_board_content_reaction_num_thanks || 0}</span>
-        <span class="reaction reaction-btn" data-boardid="${boardId}" data-commentid="${doc.id}" data-reactiontype="fb_board_content_reaction_num_pray">🙏 ${data.fb_board_content_reaction_num_pray || 0}</span>
-        <span class="reaction reaction-btn" data-boardid="${boardId}" data-commentid="${doc.id}" data-reactiontype="fb_board_content_reaction_num_heart">😍 ${data.fb_board_content_reaction_num_heart || 0}</span>
-        <span class="reaction reaction-btn" data-boardid="${boardId}" data-commentid="${doc.id}" data-reactiontype="fb_board_content_reaction_num_confuse">😩 ${data.fb_board_content_reaction_num_confuse || 0}</span>
-        <span class="reaction reaction-btn" data-boardid="${boardId}" data-commentid="${doc.id}" data-reactiontype="fb_board_content_reaction_num_cry">😢 ${data.fb_board_content_reaction_num_cry || 0}</span>
-    </div>`;
+    const firebaseConfig = {
+        apiKey: "AIzaSyCgpey5OG17jpqAmoP_l3L-7Ai3CoIvH7M",
+        authDomain: "miniapp-dev-us.firebaseapp.com",
+        projectId: "miniapp-dev-us",
+        storageBucket: "miniapp-dev-us.appspot.com",
+        messagingSenderId: "788551938459",
+        appId: "1:788551938459:web:a4662a7bc803dc8ddf313e",
+        measurementId: "G-28ZSZZ23XC"
+    };
 
-                commentsContainer.appendChild(commentDiv);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
+    // URLパラメータから掲示板IDを取得
+    const queryParams = new URLSearchParams(window.location.search);
+    const boardId = queryParams.get('boardId');
 
-            // ページの読み込みが完了したら、リアクションボタンにイベントリスナーを追加する
-            document.querySelectorAll('.reaction-btn').forEach(btn => {
+    // 掲示板の書き込み情報を取得して表示する関数
+    async function generateCommentsDom(boardId) {
+        const commentsContainer = document.getElementById('commentsContainer');
+        commentsContainer.innerHTML = ''; // 既存のコメントDOMをクリア
+
+        const commentsQuery = query(collection(db, `fb_boards/${boardId}/fb_board_contents`), orderBy("fb_board_content_timestamp", "asc"));
+        const querySnapshot = await getDocs(commentsQuery);
+        let commentNumber = 1;
+
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const commentContent = data.fb_board_content_comment;
+            const commentTimestamp = new Date(data.fb_board_content_timestamp.seconds * 1000).toLocaleString();
+            const creatorInfo = data.fb_board_toggle_anonymous ? '匿名' : 'ユーザー';
+
+            // 各コメントのDOMを作成
+            const commentDiv = document.createElement('div');
+            commentDiv.classList.add('comment');
+            commentDiv.innerHTML = `
+                <div class="comment-header">${commentNumber++}. ${creatorInfo} - ${commentTimestamp}</div>
+                <p class="comment-content">${commentContent}</p>
+                <div class="reactions">
+                    <span class="reaction reaction-btn" data-boardid="${boardId}" data-commentid="${doc.id}" data-reactiontype="fb_board_content_reaction_num_good">👍 ${data.fb_board_content_reaction_num_good || 0}</span>
+                    <span class="reaction reaction-btn" data-boardid="${boardId}" data-commentid="${doc.id}" data-reactiontype="fb_board_content_reaction_num_thanks">🙇 ${data.fb_board_content_reaction_num_thanks || 0}</span>
+                    <span class="reaction reaction-btn" data-boardid="${boardId}" data-commentid="${doc.id}" data-reactiontype="fb_board_content_reaction_num_pray">🙏 ${data.fb_board_content_reaction_num_pray || 0}</span>
+                    <span class="reaction reaction-btn" data-boardid="${boardId}" data-commentid="${doc.id}" data-reactiontype="fb_board_content_reaction_num_heart">😍 ${data.fb_board_content_reaction_num_heart || 0}</span>
+                    <span class="reaction reaction-btn" data-boardid="${boardId}" data-commentid="${doc.id}" data-reactiontype="fb_board_content_reaction_num_confuse">😩 ${data.fb_board_content_reaction_num_confuse || 0}</span>
+                    <span class="reaction reaction-btn" data-boardid="${boardId}" data-commentid="${doc.id}" data-reactiontype="fb_board_content_reaction_num_cry">😢 ${data.fb_board_content_reaction_num_cry || 0}</span>
+                </div>`;
+            commentsContainer.appendChild(commentDiv);
+        });
+
+        // ページの読み込みが完了したら、リアクションボタンにイベントリスナーを追加
+        document.querySelectorAll('.reaction-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const boardId = btn.getAttribute('data-boardid');
                 const commentId = btn.getAttribute('data-commentid');
@@ -202,20 +221,10 @@
                 onReactionClick(boardId, commentId, reactionType);
             });
         });
+    }
 
-
-
-
-
-
-
-            });
-
-        }
-
-
-// リアクションボタンのクリックイベントハンドラ
-async function onReactionClick(boardId, commentId, reactionType) {
+    // リアクションボタンのクリックイベントハンドラ
+    async function onReactionClick(boardId, commentId, reactionType) {
         const commentRef = doc(db, `fb_boards/${boardId}/fb_board_contents`, commentId);
 
         try {
@@ -224,19 +233,21 @@ async function onReactionClick(boardId, commentId, reactionType) {
             });
 
             // UIの更新
-            const reactionBtn = document.getElementById(`reaction-${commentId}-${reactionType}`);
+            const reactionBtn = document.querySelector(`[data-boardid="${boardId}"][data-commentid="${commentId}"][data-reactiontype="${reactionType}"]`);
             reactionBtn.classList.add('clicked');
             const currentCount = parseInt(reactionBtn.textContent.match(/\d+/)[0]);
             reactionBtn.textContent = reactionBtn.textContent.replace(/\d+/, currentCount + 1);
         } catch (error) {
             console.error("Error updating document: ", error);
         }
-    } 
-    
+    }
+
+    // 初回読み込み時、書き込み情報を表示
     if (boardId) {
         generateCommentsDom(boardId);
     }
-    </script>
+</script>
+
 
     
 
@@ -274,24 +285,6 @@ async function onReactionClick(boardId, commentId, reactionType) {
         <!-- ここに書き込み情報が挿入されます -->
     </div>
 
-    <!-- Firestoreから書き込みデータを取得して表示するスクリプト -->
-    <script type="module">
-        // Firebaseの初期化など
 
-        // URLパラメータから掲示板IDを取得
-        const queryParams = new URLSearchParams(window.location.search);
-        const boardId = queryParams.get('boardId');
-
-        // 掲示板の書き込み情報を取得して表示する関数
-        async function generateCommentsDom(boardId) {
-            // Firestoreからデータを取得し、DOMを生成
-            // ...
-        }
-
-        // 初回読み込み時、書き込み情報を表示
-        if (boardId) {
-            generateCommentsDom(boardId);
-        }
-    </script>
 </body>
 </html>
